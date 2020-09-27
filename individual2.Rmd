@@ -1,0 +1,106 @@
+---
+title: "Lab 3"
+author: "Brett White"
+output: html_document
+---
+
+```{r load, include = FALSE}
+library(tidyverse)
+library(readxl)
+dat <- readxl::read_xls('GSS.xls') %>%
+  rename(year = `Gss year for this respondent`, id = `Respondent id number`, marital = `Marital status`, age = `Age of respondent`, educ = `Highest year of school completed`, sex = `Respondents sex`, party = `Political party affiliation`, happy = `General happiness`, ballot = `Ballot used for interview`)
+dat$age <- as.numeric(dat$age)
+dat$educ <- as.numeric(dat$educ)
+dat$party = factor(dat$party, levels=c("Strong democrat", "Not str democrat", "Ind,near dem", "Independent", "Ind,near rep", "Not str republican", "Strong republican", "Other party", "No answer", "Don't know"))
+dat$happy <- factor(dat$happy, levels=c("Not applicable", "Don't know", "No answer", "Not too happy", "Pretty happy", "Very happy"))
+dat$ballot <- factor(dat$ballot, levels=c("Ballot a", "Ballot b", "Ballot c", "Ballot d", "Not applicable"))
+dat$marital <- factor(dat$marital, levels=c("No answer", "Never married", "Married", "Separated", "Divorced", "Widowed"))
+dat$sex <- factor(dat$sex)
+```
+
+1.
+    ```{r, dependson = "load", echo = FALSE}
+    dat %>%
+      group_by(party) %>%
+      summarize(mean_educ = mean(educ, na.rm=TRUE))
+    ```
+
+    Democrats tend to have less years of education than republicans, independents, and members of other parties.
+
+2.
+    ```{r, dependson = "load", echo = FALSE}
+    better_educ <- dat %>%
+      group_by(party) %>%
+      filter(educ > median(educ, na.rm=TRUE))
+    str(better_educ)
+    ```
+
+3.
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer"), aes(happy)) + geom_bar() + facet_wrap(~marital, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    dat %>%
+      filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer") %>%
+      group_by(marital) %>%
+      summarize(perc_happy = sum(happy %in% c("Pretty happy", "Very happy")) / length(happy))
+    ```
+
+    Individuals who never married tend to be happy. `r dat %>% filter(happy %in% c("Pretty happy", "Very happy") & marital == "Never married") %>% nrow` out of `r dat %>% filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital == "Never married") %>% nrow` (`r round((dat %>% filter(happy %in% c("Pretty happy", "Very happy") & marital == "Never married") %>% nrow) / (dat %>% filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital == "Never married") %>% nrow) * 100, digits=2)`%) of these individuals indicated that they were pretty happy or very happy. Married individuals tend to be happy. `r dat %>% filter(happy %in% c("Pretty happy", "Very happy") & marital == "Married") %>% nrow` out of `r dat %>% filter(marital == "Married") %>% nrow` of these individuals indicated that they were pretty happy or very happy. Separated individuals tend to be mostly pretty happy followed by not too happy. Divorced individuals tend to be pretty happy. Widowed individuals tend to be pretty happy.
+
+4.
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer" & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_grid(marital~party, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    dat %>%
+      filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer" & !party %in% c("No answer", "Don't know")) %>%
+      group_by(marital, party) %>%
+      summarize(perc_happy = sum(happy %in% c("Pretty happy", "Very happy")) / length(happy))
+    ```
+
+    Married individuals who were strong republicans reported being mostly very happy followed by pretty happy whereas every other political association for married individuals had mostly pretty happy reports. The other martial statuses and political affiliations showed no changes in distributions.
+
+5.
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!is.na(educ) & marital != "No answer"), aes(educ)) + geom_histogram(binwidth=1) + facet_wrap(~marital, scales = "free_y")
+    ```
+
+    The histograms above appear to show that 
+
+6.
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!is.na(age) & marital != "No answer" & !happy %in% c("Not applicable", "No answer", "Don't know")), aes(age)) + geom_histogram(binwidth=1) + facet_grid(marital~happy, scales = "free_y")
+    ```
+
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!party %in% c("No answer", "Don't know")), aes(party)) + geom_bar() + facet_wrap(~year, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    ```
+
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_wrap(~party) + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    ```
+
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & ballot != "Not applicable"), aes(happy)) + geom_bar() + facet_wrap(~ballot) + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    ```
+
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know")), aes(happy)) + geom_bar() + facet_wrap(~sex, scales = "free_y")
+    ```
+
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!party %in% c("No answer", "Don't know")), aes(party)) + geom_bar() + facet_wrap(~sex, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    ```
+
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!is.na(educ)), aes(educ)) + geom_histogram(binwidth=1) + facet_wrap(~sex, scales = "free_y")
+    ```
+
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!is.na(age)), aes(age)) + geom_histogram(binwidth=1) + facet_wrap(~ballot, scales = "free_y")
+    ```
+
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_grid(party~sex, scales = "free_y")
+    ```
+
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & marital != "No answer"), aes(happy)) + geom_bar() + facet_grid(marital~sex, scales = "free_y")
+    ```
