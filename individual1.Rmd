@@ -153,3 +153,57 @@ Based on both the table and plot, those who received a shorter education were mo
 
 6. Explore two more interesting questions, and answer those questions using the GSS data.
 
+One question to explore is how does general happiness compare to age? Another question is how does highest number of years completed school compare to general happiness? 
+
+To answer the first question 
+```{r}
+# Numerical summary
+avg_respondent <- mean(dat$`Age of respondent`, na.rm = TRUE)
+avg_respondent
+
+happy_age <- dat %>%
+                        group_by(`General happiness`) %>% 
+                        summarize(avg_happy_age = mean(`Age of respondent`, na.rm=TRUE),
+                        nrows = n()
+                    )
+
+colnames(happy_age)
+happy_age[2] <- round(happy_age[2], 0)
+ref <- c("Very happy", "Pretty happy", "Not too happy", "Don't know","No answer", "Not applicable")
+ref
+happy_age <- happy_age[order(factor(happy_age$avg_happy_age, levels = ref)),]
+print(happy_age)
+
+
+#Visualization
+  ggplot(dat, aes(x=`General happiness`,y=`Age of respondent`, fill = `General happiness`)) + geom_boxplot() + ggtitle("Age vs. General Happiness")
+```
+
+The average age of all respondents of this survey is 45 years old. Based on the table and plot, age of respondent does not seem to affect happiness. The only notable trend that can be seen is that at age 55, most respondents do not not know if they are happy. 
+
+
+
+Another question to explore is how to does general years of school completed compare to general happiness? 
+```{r}
+str(dat$`Highest year of school completed`)
+dat$`Highest year of school completed` <- as.numeric(dat$`Highest year of school completed`)
+str(dat$`Highest year of school completed`)
+
+happy_educ <- dat %>%
+                        group_by(`General happiness`) %>% 
+                        summarize(avg_educ = mean(`Highest year of school completed`, na.rm=TRUE),
+                        nrows = n()
+                    )
+
+colnames(happy_educ)
+happy_educ[2] <- round(happy_educ[2], 0)
+print(happy_educ)
+
+
+#Visualization
+  ggplot(dat, aes(x=`General happiness`,y=`Highest year of school completed`, fill = `General happiness`)) + geom_boxplot() + ggtitle("Age vs. General Happiness")
+```
+
+Based on the plot and table, it looks like education level does not affect happiness. This is surprising to me because I expected those with a higher education to be happier because usually a higher education is associated with a higher paying job. 
+
+
