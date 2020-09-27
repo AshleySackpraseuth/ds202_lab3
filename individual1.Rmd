@@ -1,0 +1,155 @@
+---
+title: 'Lab #3'
+author: "Ashley Sackpraseuth"
+date: "9/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part one: Extracing and loading data
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(data.table)
+
+dat <- readxl::read_xls("C:/Users/asack/Dropbox/Iowa State/7 - Fall '20/DS 202/ds202_lab3/GSS.xls")
+```
+
+## Part two: Exploration 
+
+1. Find the average years for the respondents with each political party affiliation. Arrange your output in a meaningful order and print. Describe any patterns you find.
+
+
+
+```{r}
+# Assuming "average years" is equivalent to age of respondent. We first have to convert the 'Age of respondent'  column to numeric to perform statistical functions on it: 
+str(dat$`Age of respondent`)
+dat$`Age of respondent` <- as.numeric(dat$`Age of respondent`)
+str(dat$`Age of respondent`)
+
+
+
+# Now we can find the average age of each political party affiliation: 
+pol_party_group <- dat %>%
+                        group_by(`Political party affiliation`) %>% 
+                        summarize(avg_age = mean(`Age of respondent`, na.rm=TRUE),
+                        nrows = n()
+                    )
+
+pol_party_group[2] <- round(pol_party_group[2], 0)
+pol_party_group <- pol_party_group[order(-(pol_party_group$avg_age)),]
+print(pol_party_group)
+```
+Based on this table, as the respondents get older they develop stronger political party affiliations. "Don't know", "Independent", and "Other party" encapsulate the youngest respondents at the average age of 37, 42, 43 years old, respectively. As they enter their mid-40's these respondents first register as Independent but near Republican/Democrat, then they register as a Republican/Democrat (but not a strong one), and by 50 years old they have made up their minds as either "No answer", "Strong republican", or "Strong democrat". One other interesting thing to note is that more respondents identify as "Democrat" than "Republican". 
+
+
+2. Create a single data frame containing records for the better educated respondents in each political party affiliation. A “better educated” respondent is someone who has strictly more years of education than the median in the same party affiliation. Print the structure of the data frame.
+
+
+```{r}
+#Finding the median age of each political party affiliation
+educ_pol_party <- dat %>%
+                        group_by(`Political party affiliation`) %>% 
+                        mutate(med_age = median(`Age of respondent`, na.rm=TRUE)) %>%
+                        filter(`Age of respondent` >= med_age)
+
+educ_pol_party[10] <- round(educ_pol_party[10], 0)
+print(str(educ_pol_party))
+```
+
+3. How is the happiness of a respondent related to his/her marriage status? Define that a person is happy if the response to question is “Very happy” or “Pretty happy”.
+
+```{r}
+  
+# Making a new happy column based on the prompt 
+  dat$happy_redefined = NULL
+
+  happy <- unique(dat$`General happiness`)
+  happy
+  
+  happy_marriage <- dat %>%
+                        mutate(happy_redefined = case_when(`General happiness` == 'Not too happy' ~ "Not happy",
+                                                           `General happiness` == 'Pretty happy' ~ "Happy",
+                                                           `General happiness` == 'Very happy' ~ "Happy",
+                                                           `General happiness` == 'No answer' ~ "No answer",
+                                                           `General happiness` == 'Very happy' ~ "Happy",
+                                                           `General happiness` == "Don't know" ~ "Don't know",
+                                                           `General happiness` == 'Not applicable' ~ "Not-applicable",
+                                                           )
+                             )
+
+  
+# Numerical summary 
+happy_table <-table(happy_marriage$`Marital status`, happy_marriage$happy_redefined)
+print(happy_table)
+
+data_sums <- rowSums(happy_table)
+data_sums
+    
+    
+# Visualizations 
+  ggplot(happy_marriage, aes(x=`Marital status`, fill=happy_redefined)) + geom_bar() + ggtitle("Happiness of Marital Statuses") + xlab("Marital status") + ylab("Count") 
+
+  
+  
+    ggplot(happy_marriage, aes(x=`Marital status`, fill=happy_redefined)) + geom_bar(position = 'fill') + ggtitle("Happiness of Marital Statuses Proportion") + xlab("Marital status") + ylab("Count") 
+```
+
+According to both the table and the first plot, majority of the respondents are married. To ensure we are getting an accurate view of how marital status affects happiness, the second plot was made. The second plot represents the percentages of the populations being measured rather than the counts themselves. According to the second plot, those who are married are the happiest, followed by those who were never married, divorced, widowed, separated, and then 'no answer'. While the exact reasons for this cannot be concluded from this chart alone, one possible explanation can be that those who are married are the happiest because they have someone to share their happiness with. One possible explanation for those who are never married ranking second on the happiness scale is they know they are not bound to anything; if they are unhappy with their relationship they can leave without major consequences. Divorced, separated, and widowed rank lowest on the happiness scale because they have endured financial and emotional hardships.
+
+4. Does party affiliation affect the relationship you found in the last question?
+```{r}
+hap_mar_pol <- happy_marriage %>% 
+                group_by(happy_redefined, `Marital status`, `Political party affiliation`)
+
+
+
+hap_table <- table(happy_marriage$happy_redefined, happy_marriage$`Marital status`, happy_marriage$`Political party affiliation`)
+
+    hap_table <- data.frame(hap_table)
+    names(hap_table)[1] <- 'Happiness' 
+    names(hap_table)[2] <- 'Marital status'
+    names(hap_table)[3] <- 'Politcal party'
+    names(hap_table)[4] <- 'Frequency'
+    
+ hap_table <- hap_table[order(-(hap_table$Frequency)),]   
+
+print(head(hap_table))
+
+
+#Visualization
+  ggplot(data=happy_marriage, aes(x=`Marital status`, fill=`happy_redefined`)) + geom_bar(stat="count",position=position_dodge())+ facet_grid(`Political party affiliation`~.)
+```
+
+This plot is difficult to read but I don't know how to make it better so because of that, I would say no, political party affiliation does not affect the relationship I found in the last question. 
+
+
+5. How is marital status related to the education of a respondent? What are possible reasons accounting for the patterns you see?
+
+```{r}
+# Numerical summary
+  dat$`Highest year of school completed` <- as.numeric(dat$`Highest year of school completed`)
+
+
+  mar_educ <- dat %>%
+                    group_by(`Marital status`) %>% 
+                    summarize(avg_educ = mean(`Highest year of school completed`, na.rm=TRUE)
+                    )
+  mar_educ <- mar_educ[order(-(mar_educ$avg_educ)),]
+  print(mar_educ)
+
+# Visualization
+  ggplot(dat, aes(`Marital status`,`Highest year of school completed`, fill=`Marital status`)) + geom_boxplot() + ggtitle("Education level of Marital Statuses")
+````
+
+Based on both the table and plot, those who received a shorter education were more likey to separate or become widowed. Surprisingly, those who chose not to answer the marital status question had the highest education, followed by those who were never married, then those who were divorced. Those who are married fall in the middle. One possible explanaation for "No answer" and "Never married" groups having the highest level of education is they value education/career-building over personal relationships, which is very common in this day and age. 
+
+
+
+6. Explore two more interesting questions, and answer those questions using the GSS data.
+
