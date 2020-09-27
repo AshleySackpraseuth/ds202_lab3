@@ -11,7 +11,7 @@ dat <- readxl::read_xls('GSS.xls') %>%
   rename(year = `Gss year for this respondent`, id = `Respondent id number`, marital = `Marital status`, age = `Age of respondent`, educ = `Highest year of school completed`, sex = `Respondents sex`, party = `Political party affiliation`, happy = `General happiness`, ballot = `Ballot used for interview`)
 dat$age <- as.numeric(dat$age)
 dat$educ <- as.numeric(dat$educ)
-dat$party = factor(dat$party, levels=c("Strong democrat", "Not str democrat", "Ind,near dem", "Independent", "Ind,near rep", "Not str republican", "Strong republican", "Other party", "No answer", "Don't know"))
+dat$party <- factor(dat$party, levels=c("Strong democrat", "Not str democrat", "Ind,near dem", "Independent", "Ind,near rep", "Not str republican", "Strong republican", "Other party", "No answer", "Don't know"))
 dat$happy <- factor(dat$happy, levels=c("Not applicable", "Don't know", "No answer", "Not too happy", "Pretty happy", "Very happy"))
 dat$ballot <- factor(dat$ballot, levels=c("Ballot a", "Ballot b", "Ballot c", "Ballot d", "Not applicable"))
 dat$marital <- factor(dat$marital, levels=c("No answer", "Never married", "Married", "Separated", "Divorced", "Widowed"))
@@ -37,7 +37,7 @@ dat$sex <- factor(dat$sex)
 
 3.
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer"), aes(happy)) + geom_bar() + facet_wrap(~marital, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer"), aes(happy)) + geom_bar() + facet_wrap(~marital, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))+ ggtitle("General Happiness vs. Marital Status") + xlab("General happiness") + ylab("Count")
     dat %>%
       filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer") %>%
       group_by(marital) %>%
@@ -48,7 +48,7 @@ dat$sex <- factor(dat$sex)
 
 4.
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer" & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_grid(marital~party, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer" & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_grid(marital~party, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("General Happiness of Political Party Affiliation vs. Marital Status") + ylab("Count") + xlab("General Happiness")
     dat %>%
       filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer" & !party %in% c("No answer", "Don't know")) %>%
       group_by(marital, party) %>%
@@ -59,48 +59,54 @@ dat$sex <- factor(dat$sex)
 
 5.
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!is.na(educ) & marital != "No answer"), aes(educ)) + geom_histogram(binwidth=1) + facet_wrap(~marital, scales = "free_y")
+    dat %>%
+      group_by(marital) %>%
+      summarize(mean_educ = mean(educ, na.rm=TRUE))
+    ```
+    
+    ```{r, dependson = "load", echo = FALSE}
+    ggplot(dat %>% filter(!is.na(educ) & marital != "No answer"), aes(educ)) + geom_histogram(binwidth=1) + facet_wrap(~marital, scales = "free_y") + ggtitle("Highest Year of School Completed vs. Marital Status") + ylab("Count") + xlab("Number of years completed in school")
     ```
 
-    The histograms above appear to show that 
+    The histograms above appear to show that regardless of marital status, the distribution of number of years completed in school is relatively the same. Widowed and separated have the widest range of number of years completed in school. Based on the table, those who chose not to answer completed the highest years of education with an average of 15.5 years, followed by never married, divorced, married, separated, then widowed. 
 
 6.
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!is.na(age) & marital != "No answer" & !happy %in% c("Not applicable", "No answer", "Don't know")), aes(age)) + geom_histogram(binwidth=1) + facet_grid(marital~happy, scales = "free_y")
+    ggplot(dat %>% filter(!is.na(age) & marital != "No answer" & !happy %in% c("Not applicable", "No answer", "Don't know")), aes(age)) + geom_histogram(binwidth=1) + facet_grid(marital~happy, scales = "free_y")+ ggtitle("Age Distribution of Happiness Levels vs. Marital Status") + ylab("Count") + xlab("Age")
     ```
 
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!party %in% c("No answer", "Don't know")), aes(party)) + geom_bar() + facet_wrap(~year, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    ggplot(dat %>% filter(!party %in% c("No answer", "Don't know")), aes(party)) + geom_bar() + facet_wrap(~year, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("Count of Political Party Affiliations by Year") + ylab("Count") + xlab("Political Party Affiliation")
     ```
 
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_wrap(~party) + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_wrap(~party) + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("General Happiness vs. Political Party Affiliations") + xlab("General Happiness") + ylab("Count")
     ```
 
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & ballot != "Not applicable"), aes(happy)) + geom_bar() + facet_wrap(~ballot) + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & ballot != "Not applicable"), aes(happy)) + geom_bar() + facet_wrap(~ballot) + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("General Happiness vs. Ballot Type") + ylab("Count") + xlab("General Happiness")
     ```
 
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know")), aes(happy)) + geom_bar() + facet_wrap(~sex, scales = "free_y")
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know")), aes(happy)) + geom_bar() + facet_wrap(~sex, scales = "free_y") + ggtitle("General Happiness vs. Gender") + ylab("Count") + xlab("General Happiness")
     ```
 
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!party %in% c("No answer", "Don't know")), aes(party)) + geom_bar() + facet_wrap(~sex, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))
+    ggplot(dat %>% filter(!party %in% c("No answer", "Don't know")), aes(party)) + geom_bar() + facet_wrap(~sex, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("Political Party Affiliations vs. Gender") + ylab("Count") + xlab("Political Party Affiliation")
     ```
 
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!is.na(educ)), aes(educ)) + geom_histogram(binwidth=1) + facet_wrap(~sex, scales = "free_y")
+    ggplot(dat %>% filter(!is.na(educ)), aes(educ)) + geom_histogram(binwidth=1) + facet_wrap(~sex, scales = "free_y") + ggtitle("Years of Education Completed vs. Gender") +ylab("Count") + xlab("Number of years completed in school")
     ```
 
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!is.na(age)), aes(age)) + geom_histogram(binwidth=1) + facet_wrap(~ballot, scales = "free_y")
+    ggplot(dat %>% filter(!is.na(age)), aes(age)) + geom_histogram(binwidth=1) + facet_wrap(~ballot, scales = "free_y") + ggtitle("Ballot Types vs. Age") + ylab("Count") + xlab("Age")
     ```
 
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_grid(party~sex, scales = "free_y")
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_grid(party~sex, scales = "free_y")+ ggtitle("General Happiness of Gender vs. Political Party Affiliation") + ylab("Count") + xlab("General Happiness")
     ```
 
     ```{r, dependson = "load", echo = FALSE}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & marital != "No answer"), aes(happy)) + geom_bar() + facet_grid(marital~sex, scales = "free_y")
+    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & marital != "No answer"), aes(happy)) + geom_bar() + facet_grid(marital~sex, scales = "free_y") + ggtitle("Gender vs. Marital Status Happiness Levels") + ylab("Count") + xlab("General Happiness")
     ```
