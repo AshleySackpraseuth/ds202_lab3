@@ -45,7 +45,9 @@ dat$sex <- factor(dat$sex)
 3. How is the happiness of a respondent related to his/her marriage status? Define that a person is happy if the response to question is “Very happy” or “Pretty happy”.
 
     ```{r, dependson = "load"}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer"), aes(happy)) + geom_bar() + facet_wrap(~marital, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))+ ggtitle("General Happiness vs. Marital Status") + xlab("General happiness") + ylab("Count")
+    dat %>%
+      filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer") %>%
+      ggplot(aes(happy)) + geom_bar() + facet_wrap(~marital, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1))+ ggtitle("General Happiness vs. Marital Status") + xlab("General happiness") + ylab("Count")
     dat %>%
       filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer") %>%
       group_by(marital) %>%
@@ -57,7 +59,9 @@ dat$sex <- factor(dat$sex)
 4. Does party affiliation affect the relationship you found in the last question?
 
     ```{r, dependson = "load"}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer" & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_grid(marital~party, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("General Happiness of Political Party Affiliation vs. Marital Status") + ylab("Count") + xlab("General Happiness")
+    dat %>%
+      filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer" & !party %in% c("No answer", "Don't know")) %>%
+      ggplot(aes(happy)) + geom_bar() + facet_grid(marital~party, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("General Happiness of Political Party Affiliation vs. Marital Status") + ylab("Count") + xlab("General Happiness")
     dat %>%
       filter(!happy %in% c("Not applicable", "Don't know", "No answer") & marital != "No answer" & !party %in% c("No answer", "Don't know")) %>%
       group_by(marital, party) %>%
@@ -75,15 +79,21 @@ dat$sex <- factor(dat$sex)
     ```
 
     ```{r, dependson = "load"}
-    ggplot(dat %>% filter(!is.na(educ) & marital != "No answer"), aes(educ)) + geom_histogram(binwidth=1) + facet_wrap(~marital, scales = "free_y") + ggtitle("Highest Year of School Completed vs. Marital Status") + ylab("Count") + xlab("Number of years completed in school")
+    dat %>%
+      filter(!is.na(educ) & marital != "No answer") %>%
+      ggplot(aes(educ)) + geom_histogram(binwidth=1) + facet_wrap(~marital, scales = "free_y") + ggtitle("Highest Year of School Completed vs. Marital Status") + ylab("Count") + xlab("Number of years completed in school")
     ```
 
     The histograms above appear to show that regardless of marital status, the distribution of number of years completed in school is relatively the same. Widowed and separated have the widest range of number of years completed in school. Based on the table, those who chose not to answer completed the highest years of education with an average of 15.5 years, followed by never married, divorced, married, separated, then widowed. We used the years of education and marital status variables to arrive at these findings.
 
 6. Explore two more interesting questions, and answer those questions using the GSS data.
 
+    How does political party affiliation affect general happiness?
+
     ```{r, dependson = "load"}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & !party %in% c("No answer", "Don't know")), aes(happy)) + geom_bar() + facet_wrap(~party, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("General Happiness vs. Political Party Affiliations") + xlab("General Happiness") + ylab("Count")
+    dat %>%
+      filter(!happy %in% c("Not applicable", "No answer", "Don't know") & !party %in% c("No answer", "Don't know")) %>%
+      ggplot(aes(happy)) + geom_bar() + facet_wrap(~party, scales = "free_y") + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("General Happiness vs. Political Party Affiliations") + xlab("General Happiness") + ylab("Count")
     dat %>%
       filter(!happy %in% c("Not applicable", "No answer", "Don't know") & !party %in% c("No answer", "Don't know")) %>%
       group_by(party) %>%
@@ -92,12 +102,16 @@ dat$sex <- factor(dat$sex)
 
     From the barplots and table above it can be seen that republicans tend to be happier than democrats, other parties, and independents. More than 90% of individuals affiliated with the republican party reported being pretty happy or very happy while only approximately 85% of democrats, other parties, and independents reported being pretty happy or very happy. We used the general happiness and political party affilication variables to arrive at these findings.
 
+    How does general happiness differ between genders for each marital status?
+
     ```{r, dependson = "load"}
-    ggplot(dat %>% filter(!happy %in% c("Not applicable", "No answer", "Don't know") & marital != "No answer"), aes(happy)) + geom_bar() + facet_grid(sex~marital) + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("Gender vs. Marital Status Happiness Levels") + ylab("Count") + xlab("General Happiness")
+    dat %>%
+      filter(!happy %in% c("Not applicable", "No answer", "Don't know") & marital != "No answer") %>%
+      ggplot(aes(happy)) + geom_bar() + facet_grid(sex~marital) + theme(axis.text.x = element_text(angle = 90, vjust = 0.25, hjust = 1)) + ggtitle("Gender vs. Marital Status Happiness Levels") + ylab("Count") + xlab("General Happiness")
     dat %>%
       filter(!happy %in% c("Not applicable", "No answer", "Don't know") & marital != "No answer") %>%
       group_by(marital, sex) %>%
       summarize(perc_happy = sum(happy %in% c("Pretty happy", "Very happy")) / n())
     ```
 
-    Based on the barplots and table above, it can be seen that there is generally no difference in happiness between genders for each marital status. Females of any marital status tend to be slightly happier than males, and divorced and widowed females tend to be significantly happier than divorced and widowed males. We did discover that there were more divorced and widowed females from whom data was collected than males. We used the general happiness, marital status, and gender variables to arrive at these findings.
+    Based on the barplots and table above, it can be seen that there is generally no difference in happiness between genders for each marital status. Females of any marital status tend to be slightly happier than males, and divorced and widowed females tend to be significantly happier than divorced and widowed males. We did discover that there were significantly more widowed females than males from whom data was collected possibly suggesting that females outlive their male spouses. We used the general happiness, marital status, and gender variables to arrive at these findings.
